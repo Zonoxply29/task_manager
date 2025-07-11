@@ -5,13 +5,17 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using System.Net.Http.Headers;
+using System.Diagnostics;
+using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace task_manager.ViewsModels
 {
     public class ListadetareasViewModel : BindableObject
     {
-        private ObservableCollection<Tarea> _tareas;
-        private readonly HttpClient _httpClient = new HttpClient(); // Inicializar aquí
+        private ObservableCollection<Tarea> _tareas = new ObservableCollection<Tarea>();
+        private bool _isRefreshing;
+        private readonly HttpClient _httpClient = new HttpClient();
 
         public ObservableCollection<Tarea> Tareas
         {
@@ -23,10 +27,21 @@ namespace task_manager.ViewsModels
             }
         }
 
+        public bool IsRefreshing
+        {
+            get => _isRefreshing;
+            set
+            {
+                _isRefreshing = value;
+                OnPropertyChanged();
+            }
+        }
+
         public Command LoadTareasCommand { get; }
         public Command EditTaskCommand { get; }
         public Command DeleteTaskCommand { get; }
         public Command NavigateToCreateTaskCommand { get; }
+        public Command LogoutCommand { get; }
 
         public ListadetareasViewModel()
         {
@@ -34,67 +49,164 @@ namespace task_manager.ViewsModels
             EditTaskCommand = new Command<Tarea>(async (task) => await EditTask(task));
             DeleteTaskCommand = new Command<Tarea>(async (task) => await DeleteTask(task));
             NavigateToCreateTaskCommand = new Command(() => NavigateToCreateTask());
+            LogoutCommand = new Command(async () => await ExecuteLogout());
+
+            // Cargar tareas al iniciar
+            Task.Run(async () => await LoadTareas());
         }
 
-        // Método para cargar las tareas desde la API
         private async Task LoadTareas()
         {
-            var token = Preferences.Get("AuthToken", string.Empty);
-            if (string.IsNullOrEmpty(token))
+            IsRefreshing = true;
+            try
             {
-                await Application.Current.MainPage.DisplayAlert("Error", "No hay sesión activa", "OK");
-                return;
-            }
+                var token = Preferences.Get("AuthToken", string.Empty);
+                if (string.IsNullOrEmpty(token))
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error", "No hay sesión activa", "OK");
+                    return;
+                }
 
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var response = await _httpClient.GetAsync("https://taskmanager-webservice.onrender.com/api/tareas");
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await _httpClient.GetAsync("https://taskmanager-webservice.onrender.com/api/tareas");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var responseBody = await response.Content.ReadAsStringAsync();
-                var tareas = JsonSerializer.Deserialize<ObservableCollection<Tarea>>(responseBody); // Cambia de TaskModel a Tarea
-                Tareas = tareas;
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"JSON recibido: {responseBody}"); // Para depuración
+
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                    };
+
+                    var tareas = JsonSerializer.Deserialize<ObservableCollection<Tarea>>(responseBody, options);
+
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        Tareas.Clear();
+                        foreach (var tarea in tareas)
+                        {
+                            Tareas.Add(tarea);
+                        }
+                    });
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error",
+                        $"Error al obtener tareas: {response.StatusCode}", "OK");
+                }
             }
-            else
+            catch (JsonException jsonEx)
             {
-                await Application.Current.MainPage.DisplayAlert("Error", "No se pudieron obtener las tareas", "OK");
+                await Application.Current.MainPage.DisplayAlert("Error JSON",
+                    $"Error al procesar los datos: {jsonEx.Message}", "OK");
+            }
+            catch (HttpRequestException httpEx)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error de conexión",
+                    $"No se pudo conectar al servidor: {httpEx.Message}", "OK");
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error",
+                    $"Error inesperado: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsRefreshing = false;
             }
         }
 
-        // Editar tarea
         private async Task EditTask(Tarea task)
         {
-            await Shell.Current.GoToAsync("//EditTaskPage", true);
+            if (task == null) return;
+
+            try
+            {
+                var navigationParameter = new Dictionary<string, object>
+                {
+                    { "TareaEditar", task }
+                };
+                await Shell.Current.GoToAsync("//EditTaskPage", navigationParameter);
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error",
+                    $"No se pudo navegar a edición: {ex.Message}", "OK");
+            }
         }
 
-        // Eliminar tarea
         private async Task DeleteTask(Tarea task)
         {
-            var token = Preferences.Get("AuthToken", string.Empty);
-            if (string.IsNullOrEmpty(token))
-            {
-                await Application.Current.MainPage.DisplayAlert("Error", "No hay sesión activa", "OK");
-                return;
-            }
+            if (task == null) return;
 
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var response = await _httpClient.DeleteAsync($"https://taskmanager-webservice.onrender.com/api/tareas/{task.Id}");
+            bool confirm = await Application.Current.MainPage.DisplayAlert(
+                "Confirmar",
+                $"¿Estás seguro de eliminar la tarea '{task.Titulo}'?",
+                "Sí", "No");
 
-            if (response.IsSuccessStatusCode)
+            if (!confirm) return;
+
+            try
             {
-                Tareas.Remove(task);
-                await Application.Current.MainPage.DisplayAlert("Éxito", "Tarea eliminada", "OK");
+                var token = Preferences.Get("AuthToken", string.Empty);
+                if (string.IsNullOrEmpty(token))
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error", "No hay sesión activa", "OK");
+                    return;
+                }
+
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await _httpClient.DeleteAsync($"https://taskmanager-webservice.onrender.com/api/tareas/{task.Id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        Tareas.Remove(task);
+                    });
+                    await Application.Current.MainPage.DisplayAlert("Éxito", "Tarea eliminada", "OK");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error",
+                        $"No se pudo eliminar la tarea. Código: {response.StatusCode}", "OK");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                await Application.Current.MainPage.DisplayAlert("Error", "No se pudo eliminar la tarea", "OK");
+                await Application.Current.MainPage.DisplayAlert("Error",
+                    $"Error al eliminar: {ex.Message}", "OK");
             }
         }
 
-        // Navegar a la página de crear tarea
+        private async Task ExecuteLogout()
+        {
+            try
+            {
+                Preferences.Remove("AuthToken");
+                await Shell.Current.GoToAsync("//LoginPage");
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error",
+                    $"Error al cerrar sesión: {ex.Message}", "OK");
+            }
+        }
+
         private void NavigateToCreateTask()
         {
-            Shell.Current.GoToAsync("//CreateTaskPage");
+            try
+            {
+                Shell.Current.GoToAsync("//CreateTaskPage");
+            }
+            catch (Exception ex)
+            {
+                Application.Current.MainPage.DisplayAlert("Error",
+                    $"Error al navegar: {ex.Message}", "OK");
+            }
         }
     }
 }

@@ -7,37 +7,85 @@
              BackgroundColor="White"
              BindingContext="{Binding Source={x:Type viewModels:ListadetareasViewModel}}">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="30" Spacing="20">
-            <Button Text="Agregar Tarea"
-                    BackgroundColor="#007aff"
-                    TextColor="White"
-                    Command="{Binding NavigateToCreateTaskCommand}" />
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Cerrar sesión"
+                     IconImageSource="logout"
+                     Order="Primary"
+                     Priority="0"
+                     Command="{Binding LogoutCommand}" />
+    </ContentPage.ToolbarItems>
 
-            <ListView x:Name="TareasListView"
-                      ItemsSource="{Binding Tareas}"
-                      IsPullToRefreshEnabled="True"
-                      RefreshCommand="{Binding LoadTareasCommand}">
-                <ListView.ItemTemplate>
+    <Grid RowDefinitions="Auto,*" Padding="20">
+        <!-- Botón Agregar -->
+        <Button Text="Agregar Tarea"
+                BackgroundColor="#007aff"
+                TextColor="White"
+                Command="{Binding NavigateToCreateTaskCommand}"
+                HorizontalOptions="Fill"
+                HeightRequest="50"
+                Margin="0,0,0,15"
+                Grid.Row="0"/>
+
+        <!-- Lista de tareas -->
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding LoadTareasCommand}">
+            <CollectionView ItemsSource="{Binding Tareas}"
+                           SelectionMode="None"
+                           EmptyView="No hay tareas disponibles">
+                <CollectionView.Header>
+                    <Grid Padding="15" ColumnDefinitions="*,Auto" BackgroundColor="#e0e0e0">
+                        <Label Text="Título y Descripción" FontAttributes="Bold" TextColor="Black" />
+                        <Label Text="Acciones" FontAttributes="Bold" TextColor="Black" Grid.Column="1" />
+                    </Grid>
+                </CollectionView.Header>
+
+                <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <ViewCell>
-                            <StackLayout Orientation="Horizontal" Padding="10">
-                                <Label Text="{Binding Titulo}" VerticalOptions="CenterAndExpand" />
+                        <Grid Padding="15"
+          ColumnDefinitions="*,Auto"
+          BackgroundColor="White"
+          MinimumHeightRequest="100">
+
+                            <!-- Titulo y Descripción -->
+                            <VerticalStackLayout Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                                <Label Text="{Binding Titulo}"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="Black"
+                   LineBreakMode="TailTruncation"/>
+
+                                <Label Text="{Binding Descripcion}"
+                   FontSize="14"
+                   TextColor="DarkGray"
+                   LineBreakMode="WordWrap"/>
+                            </VerticalStackLayout>
+
+                            <!-- Acciones -->
+                            <StackLayout Grid.Column="1" 
+                     Spacing="10" 
+                     VerticalOptions="Center"
+                     HorizontalOptions="End">
                                 <Button Text="Editar"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:ListadetareasViewModel}}, Path=EditTaskCommand}"
-                                        CommandParameter="{Binding .}" />
+                    BackgroundColor="Yellow"
+                    TextColor="Black"
+                    WidthRequest="80"
+                    HeightRequest="35"
+                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:ListadetareasViewModel}}, Path=EditTaskCommand}"
+                    CommandParameter="{Binding .}"/>
+
                                 <Button Text="Eliminar"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:ListadetareasViewModel}}, Path=DeleteTaskCommand}"
-                                        CommandParameter="{Binding .}" />
+                    BackgroundColor="Red"
+                    TextColor="White"
+                    WidthRequest="80"
+                    HeightRequest="35"
+                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:ListadetareasViewModel}}, Path=DeleteTaskCommand}"
+                    CommandParameter="{Binding .}"/>
                             </StackLayout>
-                        </ViewCell>
+                        </Grid>
                     </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-
-        </VerticalStackLayout>
-    </ScrollView>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
 </ContentPage>
-
-
-

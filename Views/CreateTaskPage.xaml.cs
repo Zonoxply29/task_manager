@@ -1,14 +1,18 @@
 using task_manager.ViewsModels;
 
-namespace task_manager.Views
+namespace task_manager.Views;
+
+public partial class CreateTaskPage : ContentPage
 {
-    public partial class CreateTaskPage : ContentPage
+    public CreateTaskPage()
     {
-        public CreateTaskPage()
-        {
-            InitializeComponent();
-            // BindingContext ya está configurado en XAML
-        }
+        InitializeComponent();
+        BindingContext = new CreateTaskViewModel();
+    }
+
+    private async void OnBackClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("..");
     }
 }
 

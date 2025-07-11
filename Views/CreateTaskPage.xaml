@@ -6,7 +6,13 @@
              Title="Crear Tarea"
              BackgroundColor="White"
              BindingContext="{Binding Source={x:Type viewModels:CreateTaskViewModel}}">
-
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Regresar"
+                 IconImageSource="arrow_back"
+                 Order="Primary"
+                 Priority="0"
+                 Clicked="OnBackClicked" />
+    </ContentPage.ToolbarItems>
     <ScrollView>
         <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="Center">
             <Label Text="Crear Nueva Tarea"
@@ -15,9 +21,15 @@
                    HorizontalOptions="Center" />
 
             <Entry Placeholder="Título de la tarea"
-                   Text="{Binding Titulo}" />
+       Text="{Binding Titulo}"
+       TextColor="Black" />
             <Entry Placeholder="Descripción de la tarea"
-                   Text="{Binding Descripcion}" />
+       Text="{Binding Descripcion}"
+       TextColor="Black" />
+
+            <Label Text="¿Está completada?"
+       FontSize="16"
+       HorizontalOptions="Start" />
             <Switch IsToggled="{Binding EstaCompletada}" />
 
             <Button Text="Crear Tarea"
