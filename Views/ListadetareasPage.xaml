@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:task_manager.ViewsModels"
+             x:Class="task_manager.Views.ListadetareasPage"
+             Title="Lista de Tareas"
+             BackgroundColor="White"
+             BindingContext="{Binding Source={x:Type viewModels:ListadetareasViewModel}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="30" Spacing="20">
+            <Button Text="Agregar Tarea"
+                    BackgroundColor="#007aff"
+                    TextColor="White"
+                    Command="{Binding NavigateToCreateTaskCommand}" />
+
+            <ListView x:Name="TareasListView"
+                      ItemsSource="{Binding Tareas}"
+                      IsPullToRefreshEnabled="True"
+                      RefreshCommand="{Binding LoadTareasCommand}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <StackLayout Orientation="Horizontal" Padding="10">
+                                <Label Text="{Binding Titulo}" VerticalOptions="CenterAndExpand" />
+                                <Button Text="Editar"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:ListadetareasViewModel}}, Path=EditTaskCommand}"
+                                        CommandParameter="{Binding .}" />
+                                <Button Text="Eliminar"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:ListadetareasViewModel}}, Path=DeleteTaskCommand}"
+                                        CommandParameter="{Binding .}" />
+                            </StackLayout>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
+
+
+

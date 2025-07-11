@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:task_manager.ViewsModels"
+             x:Class="task_manager.Views.RegisterPage"
+             Title="Registro de Usuario"
+             BackgroundColor="White"
+             BindingContext="{Binding Source={x:Type viewModels:RegisterViewModel}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="30" Spacing="15">
+
+            <Label Text="Crear Cuenta"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <Entry x:Name="nameEntry"
+                   Placeholder="Nombre completo"
+                   Text="{Binding Name}" />
+
+            <Entry x:Name="emailEntry"
+                   Placeholder="Correo electrónico"
+                   Keyboard="Email"
+                   Text="{Binding Email}" />
+
+            <Entry x:Name="passwordEntry"
+                   Placeholder="Contraseña"
+                   IsPassword="True"
+                   Text="{Binding Password}" />
+
+            <Button Text="Registrarse"
+                    Command="{Binding OnRegisterClicked}"
+                    BackgroundColor="#007AFF"
+                    TextColor="White" />
+
+            <Label Text="¿Ya tienes una cuenta?"
+                   HorizontalOptions="Center" />
+
+            <Button Text="Iniciar sesión"
+                    Command="{Binding NavigateToLoginCommand}"
+                    BackgroundColor="Transparent"
+                    TextColor="#007AFF" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

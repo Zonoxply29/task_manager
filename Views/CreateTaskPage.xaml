@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="task_manager.Views.CreateTaskPage"
+             xmlns:viewModels="clr-namespace:task_manager.ViewsModels"
+             Title="Crear Tarea"
+             BackgroundColor="White"
+             BindingContext="{Binding Source={x:Type viewModels:CreateTaskViewModel}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="Center">
+            <Label Text="Crear Nueva Tarea"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <Entry Placeholder="Título de la tarea"
+                   Text="{Binding Titulo}" />
+            <Entry Placeholder="Descripción de la tarea"
+                   Text="{Binding Descripcion}" />
+            <Switch IsToggled="{Binding EstaCompletada}" />
+
+            <Button Text="Crear Tarea"
+                    Command="{Binding CreateTaskCommand}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
+
+

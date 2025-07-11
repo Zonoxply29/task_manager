@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="task_manager.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:task_manager"
+    xmlns:views="clr-namespace:task_manager.Views"
+    xmlns:viewModels="clr-namespace:task_manager.ViewsModels"
+    Shell.FlyoutBehavior="Disabled"
+    Title="task_manager">
+
+    <!-- Aquí se quitaría la página 'MainPage' para redirigir a LoginPage primero -->
+    <ShellContent
+        Title="Login"
+        ContentTemplate="{DataTemplate views:LoginPage}" 
+        Route="LoginPage" />
+
+    <!-- Página de creación de tarea -->
+    <ShellContent
+        Title="Crear Tarea"
+        ContentTemplate="{DataTemplate views:CreateTaskPage}"
+        Route="CreateTaskPage" />
+
+    <!-- Página de Lista de Tareas -->
+    <ShellContent
+        Title="Lista de Tareas"
+        ContentTemplate="{DataTemplate views:ListadetareasPage}"
+        Route="ListadetareasPage" />
+</Shell>
+

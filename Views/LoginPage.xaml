@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:task_manager.ViewsModels"
+             x:Class="task_manager.Views.LoginPage"
+             Title="Iniciar sesión"
+             BackgroundColor="White"
+             BindingContext="{Binding Source={x:Type viewModels:LoginViewModel}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="30" Spacing="20" VerticalOptions="Center">
+
+            <Label Text="Task Manager"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <Entry x:Name="emailEntry"
+                   Placeholder="Correo electrónico"
+                   Keyboard="Email"
+                   Text="{Binding Email}"
+                   BackgroundColor="#f0f0f0"
+                   Margin="0,10" />
+
+            <Entry x:Name="passwordEntry"
+                   Placeholder="Contraseña"
+                   IsPassword="True"
+                   Text="{Binding Password}"
+                   BackgroundColor="#f0f0f0"
+                   Margin="0,10" />
+
+            <Button Text="Iniciar sesión"
+                    BackgroundColor="#007aff"
+                    TextColor="White"
+                    Command="{Binding OnLoginClicked}" />
+
+            <Label Text="¿No tienes cuenta?"
+                   HorizontalOptions="Center" />
+
+            <Button Text="Registrarse"
+                    TextColor="#007aff"
+                    BackgroundColor="Transparent"
+                    Command="{Binding NavigateToRegisterCommand}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
