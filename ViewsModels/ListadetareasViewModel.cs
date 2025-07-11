@@ -10,8 +10,8 @@ namespace task_manager.ViewsModels
 {
     public class ListadetareasViewModel : BindableObject
     {
-        private ObservableCollection<Tarea> _tareas; // Cambia de TaskModel a Tarea
-        private readonly HttpClient _httpClient; // Declara el HttpClient
+        private ObservableCollection<Tarea> _tareas;
+        private readonly HttpClient _httpClient = new HttpClient(); // Inicializar aquí
 
         public ObservableCollection<Tarea> Tareas
         {

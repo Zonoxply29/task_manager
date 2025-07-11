@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewModels="clr-namespace:task_manager.ViewsModels"
              x:Class="task_manager.Views.RegisterPage"
-             Title="Registro de Usuario"
+             Title="Registro"
              BackgroundColor="White"
              BindingContext="{Binding Source={x:Type viewModels:RegisterViewModel}}">
 
@@ -15,33 +15,46 @@
                    FontAttributes="Bold"
                    HorizontalOptions="Center" />
 
-            <Entry x:Name="nameEntry"
-                   Placeholder="Nombre completo"
+            <!-- Mensaje de error -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="Red"
+                   IsVisible="{Binding HasError}"
+                   HorizontalOptions="Center" />
+
+            <!-- Campos del formulario -->
+            <Entry Placeholder="Nombre completo"
                    Text="{Binding Name}" />
 
-            <Entry x:Name="emailEntry"
-                   Placeholder="Correo electrónico"
+            <Entry Placeholder="Correo electrónico"
                    Keyboard="Email"
                    Text="{Binding Email}" />
 
-            <Entry x:Name="passwordEntry"
-                   Placeholder="Contraseña"
+            <Entry Placeholder="Contraseña"
                    IsPassword="True"
                    Text="{Binding Password}" />
 
+            <Entry Placeholder="Confirmar contraseña"
+                   IsPassword="True"
+                   Text="{Binding ConfirmPassword}" />
+
+            <!-- Botón de registro -->
             <Button Text="Registrarse"
-                    Command="{Binding OnRegisterClicked}"
+                    Command="{Binding RegisterCommand}"
                     BackgroundColor="#007AFF"
-                    TextColor="White" />
+                    TextColor="White"
+                    IsEnabled="{Binding IsNotBusy}" />
+
+            <ActivityIndicator IsVisible="{Binding IsBusy}" 
+                               IsRunning="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
 
             <Label Text="¿Ya tienes una cuenta?"
                    HorizontalOptions="Center" />
 
             <Button Text="Iniciar sesión"
                     Command="{Binding NavigateToLoginCommand}"
-                    BackgroundColor="Transparent"
-                    TextColor="#007AFF" />
-
+                    TextColor="#007AFF"
+                    BackgroundColor="Transparent" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

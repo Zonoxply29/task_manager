@@ -15,24 +15,39 @@
                    FontAttributes="Bold"
                    HorizontalOptions="Center" />
 
+            <!-- Indicador de actividad -->
+            <ActivityIndicator IsVisible="{Binding IsBusy}" 
+                               IsRunning="{Binding IsBusy}"
+                               HorizontalOptions="Center"
+                               Color="#007aff" />
+
             <Entry x:Name="emailEntry"
                    Placeholder="Correo electrónico"
                    Keyboard="Email"
                    Text="{Binding Email}"
                    BackgroundColor="#f0f0f0"
-                   Margin="0,10" />
+                   Margin="0,10"
+                   IsEnabled="{Binding IsNotBusy}" />
 
             <Entry x:Name="passwordEntry"
                    Placeholder="Contraseña"
                    IsPassword="True"
                    Text="{Binding Password}"
                    BackgroundColor="#f0f0f0"
-                   Margin="0,10" />
+                   Margin="0,10"
+                   IsEnabled="{Binding IsNotBusy}" />
 
             <Button Text="Iniciar sesión"
                     BackgroundColor="#007aff"
                     TextColor="White"
-                    Command="{Binding OnLoginClicked}" />
+                    Command="{Binding OnLoginClicked}"
+                    IsEnabled="{Binding IsNotBusy}" />
+
+            <!-- Mensaje de error (opcional) -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="Red"
+                   HorizontalOptions="Center"
+                   IsVisible="{Binding HasError}" />
 
             <Label Text="¿No tienes cuenta?"
                    HorizontalOptions="Center" />
@@ -40,7 +55,8 @@
             <Button Text="Registrarse"
                     TextColor="#007aff"
                     BackgroundColor="Transparent"
-                    Command="{Binding NavigateToRegisterCommand}" />
+                    Command="{Binding NavigateToRegisterCommand}"
+                    IsEnabled="{Binding IsNotBusy}" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
