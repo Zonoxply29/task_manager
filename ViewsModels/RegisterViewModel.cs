@@ -124,8 +124,36 @@ namespace task_manager.ViewsModels
 
                 if (response.IsSuccessStatusCode)
                 {
-                    await Shell.Current.DisplayAlert("Éxito", "Registro completado. Por favor inicie sesión.", "OK");
-                    await Shell.Current.GoToAsync("//LoginPage");
+                    // Realizar login después del registro exitoso
+                    var loginPayload = new
+                    {
+                        CorreoElectronico = Email,
+                        Contraseña = Password
+                    };
+
+                    var loginJson = JsonSerializer.Serialize(loginPayload);
+                    var loginContent = new StringContent(loginJson, Encoding.UTF8, "application/json");
+
+                    // Intentamos hacer login inmediatamente después del registro
+                    var loginResponse = await _httpClient.PostAsync("/api/auth/login", loginContent);
+                    var loginResponseString = await loginResponse.Content.ReadAsStringAsync();
+
+                    Debug.WriteLine($"Respuesta de login: {loginResponse.StatusCode} - {loginResponseString}");
+
+                    if (loginResponse.IsSuccessStatusCode)
+                    {
+                        // Si el login es exitoso, obtenemos el token y lo almacenamos
+                        var token = JsonSerializer.Deserialize<JsonElement>(loginResponseString)
+                                    .GetProperty("token").GetString();
+                        Preferences.Set("AuthToken", token);
+
+                        // Navegamos directamente a la página de tareas (ListadetareasPage)
+                        await Shell.Current.GoToAsync("//ListadetareasPage");
+                    }
+                    else
+                    {
+                        ErrorMessage = "Error al iniciar sesión automáticamente";
+                    }
                 }
                 else
                 {

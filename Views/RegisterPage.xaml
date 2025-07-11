@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewModels="clr-namespace:task_manager.ViewsModels"
@@ -23,19 +22,27 @@
 
             <!-- Campos del formulario -->
             <Entry Placeholder="Nombre completo"
-                   Text="{Binding Name}" />
+                   Text="{Binding Name}"
+                   TextColor="Black" />
+            <!-- Establecer el color del texto -->
 
             <Entry Placeholder="Correo electrónico"
                    Keyboard="Email"
-                   Text="{Binding Email}" />
+                   Text="{Binding Email}"
+                   TextColor="Black" />
+            <!-- Establecer el color del texto -->
 
             <Entry Placeholder="Contraseña"
                    IsPassword="True"
-                   Text="{Binding Password}" />
+                   Text="{Binding Password}"
+                   TextColor="Black" />
+            <!-- Establecer el color del texto -->
 
             <Entry Placeholder="Confirmar contraseña"
                    IsPassword="True"
-                   Text="{Binding ConfirmPassword}" />
+                   Text="{Binding ConfirmPassword}"
+                   TextColor="Black" />
+            <!-- Establecer el color del texto -->
 
             <!-- Botón de registro -->
             <Button Text="Registrarse"
@@ -47,14 +54,6 @@
             <ActivityIndicator IsVisible="{Binding IsBusy}" 
                                IsRunning="{Binding IsBusy}"
                                HorizontalOptions="Center" />
-
-            <Label Text="¿Ya tienes una cuenta?"
-                   HorizontalOptions="Center" />
-
-            <Button Text="Iniciar sesión"
-                    Command="{Binding NavigateToLoginCommand}"
-                    TextColor="#007AFF"
-                    BackgroundColor="Transparent" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
