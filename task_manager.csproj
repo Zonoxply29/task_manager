@@ -68,6 +68,9 @@
 	  <Compile Update="Views\CreateTaskPage.xaml.cs">
 	    <DependentUpon>CreateTaskPage.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Views\EditTaskPage.xaml.cs">
+	    <DependentUpon>EditTaskPage.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Views\ListadetareasPage.xaml.cs">
 	    <DependentUpon>ListadetareasPage.xaml</DependentUpon>
 	  </Compile>
@@ -81,6 +84,9 @@
 
 	<ItemGroup>
 	  <MauiXaml Update="Views\CreateTaskPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\EditTaskPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\ListadetareasPage.xaml">

@@ -26,5 +26,9 @@
         Title="Lista de Tareas"
         ContentTemplate="{DataTemplate views:ListadetareasPage}"
         Route="ListadetareasPage" />
+    
+    <!--Pagina de Edicion de Tarea-->
+    <ShellContent Route="EditTaskPage" 
+              ContentTemplate="{DataTemplate views:EditTaskPage}" />
 </Shell>
 

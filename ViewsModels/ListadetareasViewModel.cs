@@ -1,4 +1,5 @@
 ﻿using task_manager.Models;
+using task_manager.Views;
 using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Text.Json;
@@ -119,42 +120,40 @@ namespace task_manager.ViewsModels
             }
         }
 
+        //Editar
         private async Task EditTask(Tarea task)
         {
             if (task == null) return;
 
             try
             {
-                var navigationParameter = new Dictionary<string, object>
-                {
-                    { "TareaEditar", task }
-                };
-                await Shell.Current.GoToAsync("//EditTaskPage", navigationParameter);
+                await Shell.Current.Navigation.PushAsync(new EditTaskPage(task));
             }
             catch (Exception ex)
             {
                 await Application.Current.MainPage.DisplayAlert("Error",
-                    $"No se pudo navegar a edición: {ex.Message}", "OK");
+                    $"No se pudo abrir la edición: {ex.Message}", "OK");
             }
         }
+
 
         private async Task DeleteTask(Tarea task)
         {
             if (task == null) return;
 
-            bool confirm = await Application.Current.MainPage.DisplayAlert(
-                "Confirmar",
+            bool confirmar = await Application.Current.MainPage.DisplayAlert(
+                "Confirmar eliminación",
                 $"¿Estás seguro de eliminar la tarea '{task.Titulo}'?",
                 "Sí", "No");
 
-            if (!confirm) return;
+            if (!confirmar) return;
 
             try
             {
                 var token = Preferences.Get("AuthToken", string.Empty);
                 if (string.IsNullOrEmpty(token))
                 {
-                    await Application.Current.MainPage.DisplayAlert("Error", "No hay sesión activa", "OK");
+                    await Application.Current.MainPage.DisplayAlert("Error", "Sesión no válida", "OK");
                     return;
                 }
 
@@ -163,22 +162,19 @@ namespace task_manager.ViewsModels
 
                 if (response.IsSuccessStatusCode)
                 {
-                    Device.BeginInvokeOnMainThread(() =>
-                    {
-                        Tareas.Remove(task);
-                    });
+                    Device.BeginInvokeOnMainThread(() => Tareas.Remove(task));
                     await Application.Current.MainPage.DisplayAlert("Éxito", "Tarea eliminada", "OK");
                 }
                 else
                 {
                     await Application.Current.MainPage.DisplayAlert("Error",
-                        $"No se pudo eliminar la tarea. Código: {response.StatusCode}", "OK");
+                        $"Error al eliminar: {response.StatusCode}", "OK");
                 }
             }
             catch (Exception ex)
             {
                 await Application.Current.MainPage.DisplayAlert("Error",
-                    $"Error al eliminar: {ex.Message}", "OK");
+                    $"Error de conexión: {ex.Message}", "OK");
             }
         }
 
