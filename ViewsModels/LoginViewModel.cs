@@ -11,6 +11,8 @@ using Polly;
 using System.Net;
 using System.Threading;
 using System.ComponentModel;
+using Plugin.Fingerprint;
+using Plugin.Fingerprint.Abstractions;
 
 namespace task_manager.ViewsModels
 {
@@ -72,6 +74,7 @@ namespace task_manager.ViewsModels
 
         public Command OnLoginClicked { get; }
         public Command NavigateToRegisterCommand { get; }
+        public Command OnFingerprintLoginClicked { get; }
 
         public LoginViewModel()
         {
@@ -96,9 +99,25 @@ namespace task_manager.ViewsModels
 
             OnLoginClicked = new Command(async () => await ExecuteLogin(), () => !IsBusy);
             NavigateToRegisterCommand = new Command(async () => await ExecuteNavigationToRegister());
+            OnFingerprintLoginClicked = new Command(async () => await ExecuteFingerprintLogin(), () => !IsBusy);
+
+            // _ = LoadLastCredentialsAsync();
         }
 
         private void ClearError() => ErrorMessage = string.Empty;
+
+        private async Task LoadLastCredentialsAsync()
+        {
+            try
+            {
+                Email = await SecureStorage.GetAsync("LastEmail") ?? string.Empty;
+                Password = await SecureStorage.GetAsync("LastPassword") ?? string.Empty;
+            }
+            catch
+            {
+                // Si falla, ignora (puede ser primera vez)
+            }
+        }
 
         private async Task ExecuteNavigationToRegister()
         {
@@ -143,7 +162,7 @@ namespace task_manager.ViewsModels
                         "Conexión limitada detectada" :
                         "No hay conexión a Internet disponible";
                     return;
-                }
+                }   
 
                 var payload = new { CorreoElectronico = Email, Contraseña = Password };
                 var json = JsonSerializer.Serialize(payload);
@@ -207,7 +226,123 @@ namespace task_manager.ViewsModels
             }
         }
 
-        private async Task ProcessLoginResponse(HttpResponseMessage response, string responseString)
+        private async Task ExecuteFingerprintLogin()
+        {
+            if (IsBusy) return;
+
+            var result = await CrossFingerprint.Current.AuthenticateAsync(new AuthenticationRequestConfiguration(
+                "Autenticación biométrica", "Accede usando tu huella digital"));
+
+            if (result.Authenticated)
+            {
+                // Recupera las credenciales pero NO las asigna a las propiedades
+                var savedEmail = await SecureStorage.GetAsync("LastEmail") ?? string.Empty;
+                var savedPassword = await SecureStorage.GetAsync("LastPassword") ?? string.Empty;
+
+                // Llama a un método de login directo con las credenciales recuperadas
+                await ExecuteLoginWithCredentials(savedEmail, savedPassword);
+            }
+            else
+            {
+                ErrorMessage = "Autenticación biométrica cancelada o fallida";
+            }
+        }
+
+        // Nuevo método privado para login directo sin tocar los inputs
+        private async Task ExecuteLoginWithCredentials(string email, string password)
+        {
+            if (IsBusy) return;
+
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains("@") || !email.Contains("."))
+            {
+                ErrorMessage = "Ingrese un correo electrónico válido";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 4)
+            {
+                ErrorMessage = "La contraseña debe tener al menos 4 caracteres";
+                return;
+            }
+
+            IsBusy = true;
+            ErrorMessage = string.Empty;
+
+            try
+            {
+                var currentAccess = Connectivity.NetworkAccess;
+                if (currentAccess != NetworkAccess.Internet)
+                {
+                    ErrorMessage = currentAccess == NetworkAccess.ConstrainedInternet ?
+                        "Conexión limitada detectada" :
+                        "No hay conexión a Internet disponible";
+                    return;
+                }
+
+                var payload = new { CorreoElectronico = email, Contraseña = password };
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                Debug.WriteLine($"Enviando credenciales (huella)...");
+
+                var retryPolicy = Policy<HttpResponseMessage>
+                    .Handle<HttpRequestException>()
+                    .Or<TaskCanceledException>()
+                    .Or<WebException>()
+                    .WaitAndRetryAsync(
+                        retryCount: 3,
+                        sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                        onRetry: (exception, delay, retryCount, context) =>
+                        {
+                            Debug.WriteLine($"Reintento #{retryCount} debido a: {exception?.Exception?.Message}");
+                        });
+
+                var response = await retryPolicy.ExecuteAsync(async () =>
+                {
+                    using var cts = new CancellationTokenSource();
+                    cts.CancelAfter(_httpClient.Timeout);
+
+                    var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+                    {
+                        Content = content
+                    };
+
+                    return await _httpClient.SendAsync(request, cts.Token);
+                });
+
+                var responseString = await response.Content.ReadAsStringAsync();
+                Debug.WriteLine($"Respuesta recibida: {response.StatusCode} - {responseString}");
+
+                // Aquí puedes pasar el email y password si necesitas guardarlos de nuevo
+                await ProcessLoginResponse(response, responseString, email, password);
+            }
+            catch (TaskCanceledException)
+            {
+                ErrorMessage = "La solicitud tardó demasiado. Intente nuevamente";
+            }
+            catch (HttpRequestException httpEx) when (httpEx.Message.Contains("Socket closed"))
+            {
+                ErrorMessage = "Error de conexión. Verifique su red e intente nuevamente";
+                Debug.WriteLine($"Error de socket: {httpEx}");
+            }
+            catch (HttpRequestException httpEx)
+            {
+                ErrorMessage = "No se pudo conectar al servidor";
+                Debug.WriteLine($"Error HTTP: {httpEx}");
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = "Error inesperado";
+                Debug.WriteLine($"Error crítico: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        // Modifica ProcessLoginResponse para aceptar email y password opcionales
+        private async Task ProcessLoginResponse(HttpResponseMessage response, string responseString, string? loginEmail = null, string? loginPassword = null)
         {
             if (response.IsSuccessStatusCode)
             {
@@ -222,7 +357,12 @@ namespace task_manager.ViewsModels
                         var token = tokenProp.GetString();
                         Preferences.Set("AuthToken", token);
 
-                        // Navegación en hilo principal con manejo de errores
+                        // Guarda credenciales de forma segura
+                        var emailToSave = loginEmail ?? Email;
+                        var passwordToSave = loginPassword ?? Password;
+                        await SecureStorage.SetAsync("LastEmail", emailToSave);
+                        await SecureStorage.SetAsync("LastPassword", passwordToSave);
+
                         await MainThread.InvokeOnMainThreadAsync(async () =>
                         {
                             try

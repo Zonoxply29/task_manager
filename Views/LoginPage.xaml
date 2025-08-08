@@ -46,6 +46,14 @@
                     Command="{Binding OnLoginClicked}"
                     IsEnabled="{Binding IsNotBusy}" />
 
+                    <!-- Botón de acceso con huella digital -->
+                    <Button
+                        Text="Acceder con huella digital"
+                        BackgroundColor="#34c759"
+                        TextColor="White"
+                        Command="{Binding OnFingerprintLoginClicked}"
+                        IsEnabled="{Binding IsNotBusy}" />
+
                     <!-- Mensaje de error (opcional) -->
                     <Label Text="{Binding ErrorMessage}"
                    TextColor="Red"
